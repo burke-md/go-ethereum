@@ -25,7 +25,7 @@ See func ` DoCall()`
 
 ### TX vs Message:
 
-`TX has no from feild, it has a signature that must be cryptographically recovered. Message has a 'from' field.`
+`TX has no from field, it has a signature that must be cryptographically recovered. Message has a 'from' field.`
 
 See line `core.ApplyMessage()`.
 
@@ -36,13 +36,28 @@ See line `core.ApplyMessage()`.
 - preCheck() nounce, gas, block gas etc
 
 ### Side quest:
-eth_call can be used to create contracts. Within the init code we can "do stuff". Essentially scripting. While eth_call doesnt require gas, it does check wallet address as if actually executing. The block state will not be mutated onchain - however functions will be run locally and data returned to API call, as if state had been changes. Additionally, eth_call accepts an `override` and specific block numbers. This could be usefull for mocking state or looking back. 
+eth_call can be used to create contracts. Within the init code we can "do stuff". Essentially scripting. While eth_call doesnt require gas, it does check wallet address as if actually executing. The block state will not be mutated onchain - however functions will be run locally and data returned to API call, as if state had been changes. Additionally, eth_call accepts an `override` and specific block numbers. This could be useful for mocking state or looking back. 
 
 Intrinsic gas. This is no longer as simple as it once was. 
 Transfer is call contained `msg.value`
 
-L:344 Access List. See metamorphic RSA write up. Cross refference?
+L:344 Access List. See metamorphic RSA write up. Cross reference?
 
+Quirky behaviour around incrementing nonce
 
+`/core/vm/evm.go L:177`
+call()
 
+L:179 Limit recursive call depth (1024)
+EIP 150 can only pass 63/64ths gas to child. Would take ~ 200B gas to hit 1024 limit (@21 000 base tx gas)
 
+L:191 !precompile !existing contract, no value transfer, simply return
+
+### Side quest `/core/vm/contracts.go`
+Observe precompiled contracts
+
+L:238 `ret, err = evm.interpreter.Run(contract, input, false)`
+
+L:129 set up memory, stack etc
+
+L:179 pc(program counter) for incrementing through bytecode.
